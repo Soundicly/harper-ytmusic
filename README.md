@@ -1,4 +1,4 @@
-# HARPER-YT
+# harper-ytmusic
 
 This is a microservice to get data from the youtube music api for our harper service.
 
