@@ -1,5 +1,6 @@
 from ytmusicapi import YTMusic
 from enum import Enum
+from pydantic import BaseModel
 
 #############################
 # LEAVING ALL METHODS ASYNC #
@@ -38,6 +39,18 @@ async def get_playlist(playlist_id: str, limit: int = 100):
 
 async def get_song(song_id: str):
   return ytmusic.get_song(song_id)
+
+class CounterpartSchema(BaseModel):
+  counterpartId: str|None
+
+async def get_counterpart(song_id: str) -> CounterpartSchema:
+  watchlist = ytmusic.get_watch_playlist(song_id, limit=5)
+  video_info = watchlist[0]
+  
+  if "counterpart" not in video_info:
+    return CounterpartSchema(None)
+  
+  return CounterpartSchema(video_info["counterpart"]["videoId"])
 
 async def get_artist(artist_id: str):
   return ytmusic.get_artist(artist_id)

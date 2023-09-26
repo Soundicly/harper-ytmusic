@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from modules import ytmusic
 
 app = FastAPI()
@@ -10,7 +10,7 @@ async def get_user(id: str):
 
 @app.get("/user/playlists")
 async def get_user_playlists(id: str):
-  response = await ytmusic.get_artist(id)
+  response = await ytmusic.get_user_playlists(id)
   return response
 
 @app.get("/artist")
@@ -31,6 +31,13 @@ async def get_playlist(id: str, limit: int|None = 100):
 @app.get("/song")
 async def get_song(id: str):
   response = await ytmusic.get_song(id)
+  return response
+
+@app.get("/counterpart")
+async def get_counterpart(id: str) -> ytmusic.CounterpartSchema:
+  response = await ytmusic.get_counterpart(id)
+  if response.counterpartId is None:
+    raise HTTPException(status_code=404, detail="Counterpart not found")
   return response
 
 @app.get("/search")
