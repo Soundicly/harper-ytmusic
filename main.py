@@ -7,6 +7,7 @@ import json
 USE_REDIS = os.getenv("REDIS_URL") is not None
 if USE_REDIS:
   from modules import redis_cache
+  print("Using redis as cache")
 
 app = FastAPI()
 
