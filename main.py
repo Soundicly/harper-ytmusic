@@ -151,9 +151,12 @@ async def get_song(id: str) -> Track:
       viewCount=int(response["viewCount"]),
   )
 
+class CounterpartSchema(BaseModel):
+  counterpartId: str|None
+
 
 @app.get("/counterpart")
-async def get_counterpart(id: str) -> ytmusic.CounterpartSchema:
+async def get_counterpart(id: str) -> CounterpartSchema:
   response = None
   if USE_REDIS:
     response = await redis_cache.get(f"counterpart:{id}")
@@ -162,11 +165,12 @@ async def get_counterpart(id: str) -> ytmusic.CounterpartSchema:
     if USE_REDIS:
       await redis_cache.set(f"counterpart:{id}", response)
     
-  if response.counterpartId is None:
-      raise HTTPException(status_code=404, detail="Counterpart not found")
+  video_info = response["tracks"][0]
   
-  return response
-
+  if "counterpart" not in video_info:
+    raise HTTPException(status_code=404, detail="Counterpart not found")
+  
+  return CounterpartSchema(counterpartId=video_info["counterpart"]["videoId"])
 
 class AlbumSearchResult(BaseModel):
   title: str

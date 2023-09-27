@@ -41,17 +41,8 @@ async def get_playlist(playlist_id: str, limit: int = 100):
 async def get_song(song_id: str):
   return authorized_ytmusic.get_song(song_id)
 
-class CounterpartSchema(BaseModel):
-  counterpartId: str|None
-
-async def get_counterpart(song_id: str) -> CounterpartSchema:
-  watchlist = authorized_ytmusic.get_watch_playlist(song_id, limit=5)
-  video_info = watchlist[0]
-  
-  if "counterpart" not in video_info:
-    return CounterpartSchema(None)
-  
-  return CounterpartSchema(video_info["counterpart"]["videoId"])
+async def get_counterpart(song_id: str):
+  return authorized_ytmusic.get_watch_playlist(song_id, limit=5)
 
 async def get_watchlist_of_playlist(playlist_id: str):
   return authorized_ytmusic.get_watch_playlist(playlistId=playlist_id, limit=100)
