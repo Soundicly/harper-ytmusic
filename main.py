@@ -1,6 +1,11 @@
 from fastapi import FastAPI, HTTPException
 from modules import ytmusic
 from pydantic import BaseModel
+import os
+
+USE_REDIS = os.getenv("REDIS_URL") is not None
+if USE_REDIS:
+  from modules import redis_cache
 
 app = FastAPI()
 
@@ -31,7 +36,12 @@ class SimpleArtist(BaseModel):
 
 @app.get("/artist")
 async def get_artist(id: str) -> Artist:
-  response = await ytmusic.get_artist(id)
+  response = None
+  if USE_REDIS:
+    response = await redis_cache.get(f"artist:{id}")
+  if not response:
+    response = await ytmusic.get_artist(id)
+    await redis_cache.set(f"artist:{id}", response)
 
   return Artist(
       name=response["name"],
@@ -63,7 +73,11 @@ class Album(BaseModel):
 
 @app.get("/album")
 async def get_album(id: str, browse_id: bool = False) -> Album:
-  response = await ytmusic.get_album(id, browse_id)
+  if USE_REDIS:
+    response = await redis_cache.get(f"album:{id}")
+  if not response:
+    response = await ytmusic.get_album(id, browse_id)
+    await redis_cache.set(f"album:{id}", response)
 
   return Album(
       title=response["title"],
@@ -105,7 +119,12 @@ class Track(BaseModel):
 
 @app.get("/song")
 async def get_song(id: str) -> Track:
-  response = await ytmusic.get_song(id)
+  if USE_REDIS:
+    response = await redis_cache.get(f"song:{id}")
+  if not response:
+    response = await ytmusic.get_song(id)
+    await redis_cache.set(f"song:{id}", response)
+    
   response = response["videoDetails"]
 
   return Track(
@@ -121,9 +140,15 @@ async def get_song(id: str) -> Track:
 
 @app.get("/counterpart")
 async def get_counterpart(id: str) -> ytmusic.CounterpartSchema:
-  response = await ytmusic.get_counterpart(id)
+  if USE_REDIS:
+    response = await redis_cache.get(f"counterpart:{id}")
+  if not response:
+    response = await ytmusic.get_counterpart(id)
+    await redis_cache.set(f"counterpart:{id}", response)
+    
   if response.counterpartId is None:
       raise HTTPException(status_code=404, detail="Counterpart not found")
+  
   return response
 
 

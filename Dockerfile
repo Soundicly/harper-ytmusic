@@ -8,6 +8,7 @@ RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
 
 COPY . /code
 
+ENV REDIS_URL=redis://localhost
 ENV PORT=2005
 EXPOSE 2005
 
