@@ -53,6 +53,9 @@ async def get_counterpart(song_id: str) -> CounterpartSchema:
   
   return CounterpartSchema(video_info["counterpart"]["videoId"])
 
+async def get_watchlist_of_playlist(playlist_id: str):
+  return authorized_ytmusic.get_watch_playlist(playlistId=playlist_id, limit=100)
+
 async def get_artist(artist_id: str):
   return authorized_ytmusic.get_artist(artist_id)
 

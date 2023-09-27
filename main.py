@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException
 from modules import ytmusic
 from pydantic import BaseModel
 import os
+import json
 
 USE_REDIS = os.getenv("REDIS_URL") is not None
 if USE_REDIS:
@@ -75,12 +76,19 @@ class Album(BaseModel):
 @app.get("/album")
 async def get_album(id: str, browse_id: bool = False) -> Album:
   response = None
+  response_watchlist = None
   if USE_REDIS:
     response = await redis_cache.get(f"album:{id}")
+    response_watchlist = await redis_cache.get(f"album_w:{id}")
   if not response:
     response = await ytmusic.get_album(id, browse_id)
     if USE_REDIS:
       await redis_cache.set(f"album:{id}", response)
+
+  if not response_watchlist:
+    response_watchlist = await ytmusic.get_watchlist_of_playlist(id)
+    if USE_REDIS:
+      await redis_cache.set(f"album_w:{id}", response_watchlist)
 
   return Album(
       title=response["title"],
@@ -102,10 +110,10 @@ async def get_album(id: str, browse_id: bool = False) -> Album:
                   for artist in track["artists"]
               ],
               videoId=track["videoId"],
-              album=track["album"],
-              durationSeconds=track["duration_seconds"],
+              album=track["album"]["name"],
+              durationSeconds=response["tracks"][i]["duration_seconds"],
           )
-          for track in response["tracks"]
+          for i, track in enumerate(response_watchlist["tracks"])
       ],
   )
 
@@ -138,7 +146,7 @@ async def get_song(id: str) -> Track:
       durationSeconds=int(response["lengthSeconds"]),
       channel=response["author"],
       channelId=response["channelId"],
-      coverUrl=response["thumbnail"][-1]["url"],
+      coverUrl=response["thumbnail"]["thumbnails"][-1]["url"],
       viewCount=int(response["viewCount"]),
   )
 
@@ -280,7 +288,7 @@ async def get_playlist(id: str, limit: int | None = 100) -> Playlist:
 
   return Playlist(
       title=response["title"],
-      description=response["description"],
+      description=response["description"] if response["description"] else "",
       playlistId=response["id"],
       coverUrl=response["thumbnails"][-1]["url"],
       author=SimpleArtist(
