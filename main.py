@@ -53,6 +53,7 @@ class Album(BaseModel):
   title: str
   coverUrl: str
   artists: list[SimpleArtist]
+  type: str
   trackCount: int
   year: str
   playlistId: str
@@ -71,6 +72,7 @@ async def get_album(id: str, browse_id: bool = False) -> Album:
           SimpleArtist(name=artist["name"], topicId=artist["id"])
           for artist in response["artists"]
       ],
+      type=response["type"],
       trackCount=response["trackCount"],
       year=response["year"],
       playlistId=response["audioPlaylistId"],
@@ -128,6 +130,7 @@ async def get_counterpart(id: str) -> ytmusic.CounterpartSchema:
 class AlbumSearchResult(BaseModel):
   title: str
   browseId: str
+  type: str
   artists: list[SimpleArtist]
   coverUrl: str
 
@@ -188,14 +191,15 @@ async def search(
               )
           )
       elif res["category"] == "Albums":
-          print(res)
           albums.append(
               AlbumSearchResult(
                   title=res["title"],
                   browseId=res["browseId"],
+                  type=res["type"],
                   artists=[
                       SimpleArtist(name=artist["name"], topicId=artist["id"])
                       for artist in res["artists"]
+                      if artist["id"] is not None
                   ],
                   coverUrl=res["thumbnails"][-1]["url"],
               )
