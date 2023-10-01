@@ -291,8 +291,6 @@ class Playlist(BaseModel):
 async def get_playlist(id: str, limit: int | None = 100) -> Playlist:
   response = await ytmusic.get_playlist(id, limit)
 
-  print(response)
-
   return Playlist(
       title=response["title"],
       description=response["description"] if response["description"] else "",
