@@ -27,13 +27,10 @@ async def get_user_playlists(user_id: str):
 
 async def get_album(album_id: str, browse_id: bool):
   if not browse_id:
-    return authorized_ytmusic.get_album(authorized_ytmusic.get_album_browse_id(album_id))
+    album_browse_id = authorized_ytmusic.get_album_browse_id(album_id)
+    return authorized_ytmusic.get_album(album_browse_id)
   
   return authorized_ytmusic.get_album(album_id)
-
-async def get_album_noauth(album_id: str):
-  browse_id = authorized_ytmusic.get_album_browse_id(album_id)
-  return authorized_ytmusic.get_album(browse_id)
 
 async def get_playlist(playlist_id: str, limit: int = 100):
   return authorized_ytmusic.get_playlist(playlist_id, limit)
