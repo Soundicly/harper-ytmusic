@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException
-from modules import ytmusic
+from modules import ytmusic, parse_utils
 from pydantic import BaseModel
 import os
 import json
@@ -108,7 +108,7 @@ async def get_album(id: str, browse_id: bool = False) -> Album:
               title=track["title"],
               artists=[
                   SimpleArtist(name=artist["name"], topicId=artist["id"])
-                  for artist in track["artists"]
+                  for artist in parse_utils.process_artists(track["artists"])
               ],
               videoId=track["videoId"],
               album=track["album"]["name"],
@@ -255,8 +255,7 @@ async def search(
                   title=res["title"],
                   artists=[
                       SimpleArtist(name=artist["name"], topicId=artist["id"])
-                      for artist in res["artists"]
-                      if artist["id"] is not None
+                      for artist in parse_utils.process_artists(res["artists"])
                   ],
                   album=SimpleAlbum(name=res["album"]["name"], id=res["album"]["id"]),
                   videoId=res["videoId"],
@@ -274,6 +273,7 @@ class SimplePlaylistTrack(BaseModel):
   videoId: str
   album: SimpleAlbum
   durationSeconds: int
+  explicit: bool
 
 
 class Playlist(BaseModel):
@@ -291,6 +291,8 @@ class Playlist(BaseModel):
 async def get_playlist(id: str, limit: int | None = 100) -> Playlist:
   response = await ytmusic.get_playlist(id, limit)
 
+  print(response)
+
   return Playlist(
       title=response["title"],
       description=response["description"] if response["description"] else "",
@@ -306,11 +308,12 @@ async def get_playlist(id: str, limit: int | None = 100) -> Playlist:
               title=track["title"],
               artists=[
                   SimpleArtist(name=artist["name"], topicId=artist["id"])
-                  for artist in track["artists"]
+                  for artist in parse_utils.process_artists(track["artists"])
               ],
               videoId=track["videoId"],
               album=SimpleAlbum(name=track["album"]["name"], id=track["album"]["id"]),
               durationSeconds=track["duration_seconds"],
+              explicit=track["isExplicit"],
           )
           for track in response["tracks"]
       ],
