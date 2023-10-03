@@ -19,18 +19,26 @@ def process_artists(artists: list[dict]) -> list[dict]:
 # wrong_artists: Example1, Example2 & Example3
 def parse_wrong_artists(wrong_artists: str) -> list[str]:
   artists = []
-  cache = []
+  artist = []
+  last = False
   
-  for artist in wrong_artists.split():
-    if artist == "&":
+  for i, word in enumerate(wrong_artists.split()):
+    if last:
+      artist.append(word)
+      if i == len(wrong_artists.split()) - 1:
+        artists.append(" ".join(artist))
+    if word == "&":
+      artists.append(" ".join(artist))
+      artist = []
+      last = True
       continue
       
-    if artist.endswith(","):
-      artist = artist[:-1]
-      cache.append(artist)
-      artists.append(" ".join(cache))
-      cache = []
+    if word.endswith(","):
+      word = word[:-1]
+      artist.append(word)
+      artists.append(" ".join(artist))
+      artist = []
     else:
-      cache.append(artist)
+      artist.append(word)
   
   return artists

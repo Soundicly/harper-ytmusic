@@ -1,5 +1,5 @@
-# ytmusicapi @ git+https://github.com/Soundicly/ytmusicapi@56d54a2
-ytmusicapi==1.2.1
+ytmusicapi @ git+https://github.com/Soundicly/async-ytmusicapi@344fbd3
+# ytmusicapi==1.2.1
 fastapi==0.103.1
 uvicorn==0.23.2
 redis==5.0.1

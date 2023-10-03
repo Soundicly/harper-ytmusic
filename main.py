@@ -75,19 +75,19 @@ class Album(BaseModel):
 
 
 @app.get("/album")
-async def get_album(id: str, browse_id: bool = False) -> Album:
+async def get_album(id: str) -> Album:
   response = None
   response_watchlist = None
   if USE_REDIS:
     response = await redis_cache.get(f"album:{id}")
     response_watchlist = await redis_cache.get(f"album_w:{id}")
   if not response:
-    response = await ytmusic.get_album(id, browse_id)
+    response = await ytmusic.get_album(id)
     if USE_REDIS:
       await redis_cache.set(f"album:{id}", response)
 
   if not response_watchlist:
-    response_watchlist = await ytmusic.get_watchlist_of_playlist(id)
+    response_watchlist = await ytmusic.get_watchlist_of_playlist(response["audioPlaylistId"])
     if USE_REDIS:
       await redis_cache.set(f"album_w:{id}", response_watchlist)
 
