@@ -61,8 +61,26 @@ class SimpleAlbumTrack(BaseModel):
   album: str
   durationSeconds: int
 
+class AlbumBrowseId(BaseModel):
+  browseId: str
 
+@app.get("/album/browseId")
+async def get_album_browseId(playlist_id: str) -> AlbumBrowseId:
+  browse_id = playlist_id
+  if not browse_id.startswith("MPREb_"):
+    browse_id_redis = None
+    if USE_REDIS:
+      browse_id_redis = await redis_cache.get(f"album_b:{id}")
+    if browse_id_redis:
+      browse_id = browse_id_redis
+    else:
+      browse_id = await ytmusic.get_browse_id(browse_id)
+      if USE_REDIS:
+        await redis_cache.set(f"album_b:{id}", browse_id)
+  
+  return AlbumBrowseId(browseId=browse_id)
 class Album(BaseModel):
+  browseId: str
   title: str
   coverUrl: str
   artists: list[SimpleArtist]
@@ -76,22 +94,36 @@ class Album(BaseModel):
 
 @app.get("/album")
 async def get_album(id: str) -> Album:
+  browse_id = id
+  if not browse_id.startswith("MPREb_"):
+    browse_id_redis = None
+    if USE_REDIS:
+      browse_id_redis = await redis_cache.get(f"album_b:{id}")
+    if browse_id_redis:
+      browse_id = browse_id_redis
+    else:
+      browse_id = await ytmusic.get_browse_id(browse_id)
+      if USE_REDIS:
+        await redis_cache.set(f"album_b:{id}", browse_id)
+  
   response = None
   response_watchlist = None
   if USE_REDIS:
-    response = await redis_cache.get(f"album:{id}")
-    response_watchlist = await redis_cache.get(f"album_w:{id}")
+    response = await redis_cache.get(f"album:{browse_id}")
+    response_watchlist = await redis_cache.get(f"album_w:{browse_id}")
   if not response:
-    response = await ytmusic.get_album(id)
+    response = await ytmusic.get_album(browse_id)
     if USE_REDIS:
-      await redis_cache.set(f"album:{id}", response)
+      await redis_cache.set(f"album:{browse_id}", response)
 
+  audio_playlist_id = response["audioPlaylistId"]
   if not response_watchlist:
-    response_watchlist = await ytmusic.get_watchlist_of_playlist(response["audioPlaylistId"])
+    response_watchlist = await ytmusic.get_watchlist_of_playlist(audio_playlist_id)
     if USE_REDIS:
-      await redis_cache.set(f"album_w:{id}", response_watchlist)
+      await redis_cache.set(f"album_w:{audio_playlist_id}", response_watchlist)
 
   return Album(
+      browseId=browse_id,
       title=response["title"],
       coverUrl=response["thumbnails"][-1]["url"],
       artists=[

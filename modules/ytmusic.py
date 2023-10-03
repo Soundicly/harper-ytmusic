@@ -34,12 +34,16 @@ async def get_user_playlists(user_id: str):
   authorized_ytmusic = await get_ytmusic()
   return await authorized_ytmusic.get_user_playlists(user_id)
 
-async def get_album(album_id: str):
+async def get_browse_id(album_id: str) -> str:
   authorized_ytmusic = await get_ytmusic()
-  if not album_id.startswith("MPREb_"):
-    album_id = await authorized_ytmusic.get_album_browse_id(album_id)
+  return await authorized_ytmusic.get_album_browse_id(album_id)
+
+async def get_album(browse_id: str):
+  authorized_ytmusic = await get_ytmusic()
+  if not browse_id.startswith("MPREb_"):
+    browse_id = await authorized_ytmusic.get_album_browse_id(browse_id)
     
-  return await authorized_ytmusic.get_album(album_id)
+  return await authorized_ytmusic.get_album(browse_id)
 
 async def get_playlist(playlist_id: str, limit: int = 100):
   authorized_ytmusic = await get_ytmusic()
