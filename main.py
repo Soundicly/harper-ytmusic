@@ -122,13 +122,14 @@ async def get_album(id: str) -> Album:
     if USE_REDIS:
       await redis_cache.set(f"album_w:{audio_playlist_id}", response_watchlist)
 
+
   return Album(
       browseId=browse_id,
       title=response["title"],
       coverUrl=response["thumbnails"][-1]["url"],
       artists=[
           SimpleArtist(name=artist["name"], topicId=artist["id"])
-          for artist in response["artists"]
+          for artist in parse_utils.process_artists(response["artists"])
       ],
       type=response["type"],
       trackCount=response["trackCount"],
@@ -275,8 +276,7 @@ async def search(
                   type=res["type"],
                   artists=[
                       SimpleArtist(name=artist["name"], topicId=artist["id"])
-                      for artist in res["artists"]
-                      if artist["id"] is not None
+                      for artist in parse_utils.process_artists(res["artists"])
                   ],
                   coverUrl=res["thumbnails"][-1]["url"],
               )
