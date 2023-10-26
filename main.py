@@ -122,7 +122,6 @@ async def get_album(id: str) -> Album:
     if USE_REDIS:
       await redis_cache.set(f"album_w:{audio_playlist_id}", response_watchlist)
 
-
   return Album(
       browseId=browse_id,
       title=response["title"],
@@ -243,23 +242,53 @@ class SearchResponse(BaseModel):
 async def search(
   query: str, limit: int | None = 20, filter: ytmusic.SearchFilter = None
 ) -> SearchResponse:
-  response = await ytmusic.search(query, filter, limit)
+  actual_filter = filter if filter == None or filter.value != "albums" else None
+  response = await ytmusic.search(query, actual_filter, limit)
 
   tracks: list[SongSearchResult] = []
   albums: list[AlbumSearchResult] = []
   artists: list[ArtistSearchResult] = []
-
+  
   for res in response:
+      weirded_album = False
+      
       if res["category"] == "Top result":
           if res["resultType"] == "album":
               res["category"] = "Albums"
           elif res["resultType"] == "song":
+              try:
+                if "album" in res and filter and filter.value == "albums":
+                  browse_id = res["album"]["id"]
+                  album_data = await ytmusic.get_album(browse_id)
+                  
+                  albums.append(
+                      AlbumSearchResult(
+                          title=album_data["title"],
+                          browseId=browse_id,
+                          type=album_data["type"],
+                          artists=[
+                              SimpleArtist(name=artist["name"], topicId=artist["id"])
+                              for artist in parse_utils.process_artists(album_data["artists"])
+                          ],
+                          coverUrl=album_data["thumbnails"][-1]["url"],
+                      )
+                  )
+                  
+                  continue
+              except Exception as e:
+                print("Tried to get weird ytmusic album data (ANTIDEPRESIVOS), but couldn't. Treating it as normal.")
+                print(e)
+              
               res["category"] = "Songs"
           elif res["resultType"] == "artist":
               res["category"] = "Artists"
               res["artist"] = res["artists"][0]["name"]
               res["browseId"] = res["artists"][0]["id"]
-
+      
+      if res["category"] == "Albums" and res["resultType"] == "song":
+        res["category"] = "Songs"
+        weirded_album = True
+      
       if res["category"] == "Artists":
           artists.append(
               ArtistSearchResult(
@@ -281,7 +310,7 @@ async def search(
                   coverUrl=res["thumbnails"][-1]["url"],
               )
           )
-      elif res["category"] == "Songs":
+      elif res["category"] == "Songs" and not weirded_album:
           tracks.append(
               SongSearchResult(
                   title=res["title"],
