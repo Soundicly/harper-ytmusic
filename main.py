@@ -249,6 +249,9 @@ async def search(
   albums: list[AlbumSearchResult] = []
   artists: list[ArtistSearchResult] = []
 
+  with open("search.json", "w") as f:
+    json.dump(response, f, indent=2)
+
   for res in response:
       if res["category"] == "Top result":
           if res["resultType"] == "album":
@@ -296,6 +299,28 @@ async def search(
               )
           )
 
+  if filter and filter.value == "albums" and len(albums) == 0:
+    songs = await search(query, limit, ytmusic.SearchFilter.SONGS)
+    for song in songs.tracks:
+      if not song.album:
+        continue
+      
+      albumid = song.album.id
+      albumfromsong = await ytmusic.get_album(albumid)
+
+      albums.append(
+        AlbumSearchResult(
+          title=albumfromsong["title"],
+          browseId=albumid,
+          type=albumfromsong["type"],
+          artists=[
+            SimpleArtist(name=artist["name"], topicId=artist["id"])
+            for artist in parse_utils.process_artists(albumfromsong["artists"])
+          ],
+          coverUrl=albumfromsong["thumbnails"][-1]["url"],
+        )
+      )
+      
   return SearchResponse(tracks=tracks, albums=albums, artists=artists)
 
 
