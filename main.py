@@ -145,7 +145,7 @@ async def get_album(id: str) -> Album:
               ],
               videoId=track["videoId"],
               album=track["album"]["name"],
-              durationSeconds=response["tracks"][i]["duration_seconds"],
+              durationSeconds=response["tracks"][i]["duration_seconds"] if "duration_seconds" in response["tracks"][i] else -1,
           )
           for i, track in enumerate(response_watchlist["tracks"])
       ],
