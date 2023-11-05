@@ -249,8 +249,8 @@ async def search(
   albums: list[AlbumSearchResult] = []
   artists: list[ArtistSearchResult] = []
 
-  with open("search.json", "w") as f:
-    json.dump(response, f, indent=2)
+  # with open("search.json", "w") as f:
+  #   json.dump(response, f, indent=2)
 
   for res in response:
       if res["category"] == "Top result":
