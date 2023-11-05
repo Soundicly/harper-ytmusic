@@ -272,6 +272,10 @@ async def search(
               )
           )
       elif res["category"] == "Albums":
+          if "browserId" not in res:
+            print(f"Weird album: {res}")
+            continue
+          
           albums.append(
               AlbumSearchResult(
                   title=res["title"],
