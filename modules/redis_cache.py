@@ -10,5 +10,5 @@ async def get(key: str) -> dict|None:
     return None
   return json.loads(data)
 
-async def set(key: str, value: dict, delete_time_seconds: int = 30) -> None:
+async def set(key: str, value: dict, delete_time_seconds: int = 10) -> None:
   await redis_client.set(key, json.dumps(value), ex=delete_time_seconds)
