@@ -60,12 +60,13 @@ class SimpleAlbumTrack(BaseModel):
   videoId: str
   album: str
   durationSeconds: int
+  explicit: bool
 
 class AlbumBrowseId(BaseModel):
   browseId: str
 
 @app.get("/album/browseId")
-async def get_album_browseId(playlist_id: str) -> AlbumBrowseId:
+async def get_album_browse_id(playlist_id: str) -> AlbumBrowseId:
   browse_id = playlist_id
   if not browse_id.startswith("MPREb_"):
     browse_id_redis = None
@@ -122,7 +123,6 @@ async def get_album(id: str) -> Album:
     if USE_REDIS:
       await redis_cache.set(f"album_w:{audio_playlist_id}", response_watchlist)
 
-
   return Album(
       browseId=browse_id,
       title=response["title"],
@@ -146,6 +146,7 @@ async def get_album(id: str) -> Album:
               videoId=track["videoId"],
               album=track["album"]["name"],
               durationSeconds=response["tracks"][i]["duration_seconds"] if "duration_seconds" in response["tracks"][i] else -1,
+              explicit=response["tracks"][i]["isExplicit"],
           )
           for i, track in enumerate(response_watchlist["tracks"])
       ],
@@ -181,7 +182,7 @@ async def get_song(id: str) -> Track:
       channel=response["author"],
       channelId=response["channelId"],
       coverUrl=response["thumbnail"]["thumbnails"][-1]["url"],
-      viewCount=int(response["viewCount"]),
+      viewCount=int(response["viewCount"])
   )
 
 class CounterpartSchema(BaseModel):
@@ -225,6 +226,7 @@ class SongSearchResult(BaseModel):
   videoId: str
   durationSeconds: int
   imageUrl: str
+  explicit: bool
 
 
 class ArtistSearchResult(BaseModel):
@@ -300,6 +302,7 @@ async def search(
                   videoId=res["videoId"],
                   durationSeconds=res["duration_seconds"],
                   imageUrl=res["thumbnails"][-1]["url"],
+                  explicit=res["isExplicit"],
               )
           )
 
