@@ -302,7 +302,7 @@ async def search(
                   videoId=res["videoId"],
                   durationSeconds=res["duration_seconds"],
                   imageUrl=res["thumbnails"][-1]["url"],
-                  explicit=res["isExplicit"],
+                  explicit=res["isExplicit"] if "isExplicit" in res else False,
               )
           )
 
