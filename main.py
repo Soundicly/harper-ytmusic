@@ -131,7 +131,7 @@ async def get_album(id: str) -> Album:
           SimpleArtist(name=artist["name"], topicId=artist["id"])
           for artist in parse_utils.process_artists(response["artists"])
       ],
-      type=response["type"],
+      type=parse_utils.get_type(response),
       trackCount=response["trackCount"],
       year=response["year"],
       playlistId=response["audioPlaylistId"],
@@ -209,7 +209,7 @@ async def get_counterpart(id: str) -> CounterpartSchema:
 class AlbumSearchResult(BaseModel):
   title: str
   browseId: str
-  type: str
+  type: str|None
   artists: list[SimpleArtist]
   coverUrl: str
 
@@ -282,7 +282,7 @@ async def search(
               AlbumSearchResult(
                   title=res["title"],
                   browseId=res["browseId"],
-                  type=res["type"],
+                  type=parse_utils.get_type(res),
                   artists=[
                       SimpleArtist(name=artist["name"], topicId=artist["id"])
                       for artist in parse_utils.process_artists(res["artists"])
@@ -319,7 +319,7 @@ async def search(
         AlbumSearchResult(
           title=albumfromsong["title"],
           browseId=albumid,
-          type=albumfromsong["type"],
+          type=parse_utils.get_type(albumfromsong),
           artists=[
             SimpleArtist(name=artist["name"], topicId=artist["id"])
             for artist in parse_utils.process_artists(albumfromsong["artists"])

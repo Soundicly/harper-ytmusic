@@ -42,3 +42,6 @@ def parse_wrong_artists(wrong_artists: str) -> list[str]:
       artist.append(word)
   
   return artists
+
+def get_type(album) -> str|None:
+  return album["type"] if "type" in album else None
