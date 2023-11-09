@@ -274,7 +274,7 @@ async def search(
               )
           )
       elif res["category"] == "Albums":
-          if "browserId" not in res:
+          if "browseId" not in res:
             print(f"Weird album: {res}")
             continue
           
