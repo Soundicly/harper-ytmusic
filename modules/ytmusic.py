@@ -2,11 +2,6 @@ from ytmusicapi import YTMusic
 from enum import Enum
 from pydantic import BaseModel
 
-#############################
-# LEAVING ALL METHODS ASYNC #
-# FOR A FUTURE :D           #
-#############################
-
 class SearchFilter(str, Enum):
   SONGS = "songs"
   VIDEOS = "videos"
