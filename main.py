@@ -255,7 +255,9 @@ async def search(
   #   json.dump(response, f, indent=2)
 
   for res in response:
+      top_result = False
       if res["category"] == "Top result":
+          top_result = True
           if res["resultType"] == "album":
               res["category"] = "Albums"
           elif res["resultType"] == "song":
@@ -275,7 +277,7 @@ async def search(
           )
       elif res["category"] == "Albums":
           if "browseId" not in res or not res["browseId"]:
-            print(f"Weird album: {res}")
+            print(f"Weird album (top_result: {top_result}) {res}")
             continue
           
           albums.append(
